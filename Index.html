@@ -105,6 +105,18 @@
       margin: auto;
       margin-top: 20px;
     }
+    .test-cell.structuur-korrel {
+  border: 2px dotted black;
+}
+.test-cell.structuur-glad {
+  border: 2px solid black;
+}
+.test-cell.structuur-grove {
+  border: 3px dashed black;
+}
+.test-cell.structuur-slijmerig {
+  border: 3px double black;
+}
 
     @keyframes spin {
       0% {
@@ -380,16 +392,19 @@
         setTimeout(() => {
           const mixedColor = mixColors(colors);
           const resultPot = document.createElement("div");
-resultPot.className = `pot structuur-${structuur}`;
-resultPot.innerHTML = `<span>Resultaat</span>`;
-resultPot.style.backgroundColor = mixedColor;
+          resultPot.className = `pot structuur-${structuur}`;
+          resultPot.innerHTML = `<span>Resultaat</span>`;
+          resultPot.style.backgroundColor = mixedColor;
 
+          // ✨ FIX HIER:
+          const resultId = "result-pot-" + Date.now(); // of een andere unieke manier
+          resultPot.id = resultId;
 
-resultPot.draggable = true;
-resultPot.ondragstart = drag;
+          resultPot.draggable = true;
+          resultPot.ondragstart = drag;
 
           document.getElementById("output-container").appendChild(resultPot);
-          machine.innerHTML = ""; 
+          machine.innerHTML = "";
         }, effectiveMixTime);
       });
     }
@@ -456,7 +471,7 @@ resultPot.ondragstart = drag;
       const cols = parseInt(document.getElementById("gridCols").value);
 
       const testGrid = document.getElementById("test-grid");
-      testGrid.innerHTML = "";
+      testGrid.innerHTML = ""; // reset grid
       testGrid.style.gridTemplateRows = `repeat(${rows}, 50px)`;
       testGrid.style.gridTemplateColumns = `repeat(${cols}, 50px)`;
 
@@ -468,6 +483,7 @@ resultPot.ondragstart = drag;
         cell.style.border = "1px solid #ccc";
         cell.style.backgroundColor = "white";
 
+        // Drop functionaliteit
         cell.ondragover = allowDrop;
         cell.ondrop = function (event) {
           event.preventDefault();
@@ -475,8 +491,16 @@ resultPot.ondragstart = drag;
           const pot = document.getElementById(potId);
 
           if (!pot.classList.contains("pot")) return;
+
+          // Copy style from pot
           cell.style.backgroundColor = pot.style.backgroundColor;
-          cell.className = "test-cell " + pot.classList[1];
+
+          // Structuur-klassen kopiëren
+          cell.className = "test-cell";
+          const structuurClass = Array.from(pot.classList).find(c => c.startsWith("structuur-"));
+          if (structuurClass) {
+            cell.classList.add(structuurClass);
+          }
         };
 
         testGrid.appendChild(cell);
