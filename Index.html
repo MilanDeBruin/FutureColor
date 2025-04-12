@@ -213,6 +213,15 @@
     <h2>Gemengde resultaten</h2>
     <div id="output-container" class="workspace"></div>
 
+    <h2>Kleurentest</h2>
+  <div class="form-container">
+    <label>Rijen: <input type="number" id="gridRows" value="6" /></label>
+    <label>Kolommen: <input type="number" id="gridCols" value="6" /></label>
+    <button onclick="generateTestGrid()">Genereer grid</button>
+  </div>
+
+  <div id="test-grid" style="display: grid; gap: 4px; margin: 20px;"></div>
+
     <script>
       let ingredientCount = 0;
       let potCount = 0;
@@ -357,56 +366,62 @@
       }
 
       function handlePotDrop(event) {
-        event.preventDefault();
-        const potId = event.dataTransfer.getData("text/plain");
-        const pot = document.getElementById(potId);
-        const machine = event.currentTarget;
+      event.preventDefault();
+      const potId = event.dataTransfer.getData("text/plain");
+      const pot = document.getElementById(potId);
+      const machine = event.currentTarget;
 
-        if (!pot.classList.contains("pot")) return;
+      if (!pot.classList.contains("pot")) return;
 
-        const ingredients = pot.querySelectorAll(".ingredient");
-        if (ingredients.length === 0) {
-          alert("Deze pot bevat geen ingrediënten.");
-          return;
-        }
-
-        const speeds = Array.from(ingredients).map((ing) =>
-          parseInt(ing.getAttribute("data-speed"))
-        );
-        const times = Array.from(ingredients).map((ing) =>
-          parseInt(ing.getAttribute("data-mintime"))
-        );
-
-        // Zorg ervoor dat alle snelheden gelijk zijn (zoals je eerder al checkte)
-        const potSpeed = speeds[0];
-        const highestTime = Math.max(...times);
-
-        const machineSpeed = parseInt(machine.getAttribute("data-speed"));
-
-        // 🔄 Bereken mengtijd op basis van snelheid en tijd
-        const effectiveMixTime = highestTime / (potSpeed * machineSpeed);
-
-        const colors = Array.from(ingredients).map((ing) =>
-          ing.getAttribute("data-color")
-        );
-        const structuur = ingredients[0].getAttribute("data-structuur");
-
-        // 🔄 Voeg loader toe aan de machine
-        machine.innerHTML = `<div class="loader"></div><p style="text-align:center;">Mengen...</p>`;
-
-        requestAnimationFrame(() => {
-          setTimeout(() => {
-            const mixedColor = mixColors(colors);
-            const resultPot = document.createElement("div");
-            resultPot.className = `pot structuur-${structuur}`;
-            resultPot.innerHTML = `<span>Resultaat</span>`;
-            resultPot.style.backgroundColor = mixedColor;
-
-            document.getElementById("output-container").appendChild(resultPot);
-            machine.innerHTML = `<span>Machine ${machine.number}</span>`;
-          }, effectiveMixTime);
-        });
+      const ingredients = pot.querySelectorAll(".ingredient");
+      if (ingredients.length === 0) {
+        alert("Deze pot bevat geen ingrediënten.");
+        return;
       }
+
+      const speeds = Array.from(ingredients).map((ing) =>
+        parseInt(ing.getAttribute("data-speed"))
+      );
+      const times = Array.from(ingredients).map((ing) =>
+        parseInt(ing.getAttribute("data-mintime"))
+      );
+
+
+      const potSpeed = speeds[0];
+      const highestTime = Math.max(...times);
+
+      const machineSpeed = parseInt(machine.getAttribute("data-speed"));
+
+      const effectiveMixTime = highestTime / (potSpeed * machineSpeed);
+
+      const colors = Array.from(ingredients).map((ing) =>
+        ing.getAttribute("data-color")
+      );
+      const structuur = ingredients[0].getAttribute("data-structuur");
+
+
+      machine.innerHTML = `<div class="loader"></div><p style="text-align:center;">Mengen...</p>`;
+
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          const mixedColor = mixColors(colors);
+          const resultPot = document.createElement("div");
+          resultPot.className = `pot structuur-${structuur}`;
+          resultPot.innerHTML = `<span>Resultaat</span>`;
+          resultPot.style.backgroundColor = mixedColor;
+
+          // ✨ FIX HIER:
+          const resultId = "result-pot-" + Date.now(); // of een andere unieke manier
+          resultPot.id = resultId;
+
+          resultPot.draggable = true;
+          resultPot.ondragstart = drag;
+
+          document.getElementById("output-container").appendChild(resultPot);
+          machine.innerHTML = "";
+        }, effectiveMixTime);
+      });
+    }
 
       function createRandomIngredient() {
         const ingredient = document.createElement("div");
@@ -476,6 +491,47 @@
         // Toon de geselecteerde hal
         document.getElementById(`hall${hallNumber}`).style.display = "block";
       }
+
+      function generateTestGrid() {
+      const rows = parseInt(document.getElementById("gridRows").value);
+      const cols = parseInt(document.getElementById("gridCols").value);
+
+      const testGrid = document.getElementById("test-grid");
+      testGrid.innerHTML = ""; // reset grid
+      testGrid.style.gridTemplateRows = `repeat(${rows}, 50px)`;
+      testGrid.style.gridTemplateColumns = `repeat(${cols}, 50px)`;
+
+      for (let i = 0; i < rows * cols; i++) {
+        const cell = document.createElement("div");
+        cell.className = "test-cell";
+        cell.style.width = "50px";
+        cell.style.height = "50px";
+        cell.style.border = "1px solid #ccc";
+        cell.style.backgroundColor = "white";
+
+        // Drop functionaliteit
+        cell.ondragover = allowDrop;
+        cell.ondrop = function (event) {
+          event.preventDefault();
+          const potId = event.dataTransfer.getData("text/plain");
+          const pot = document.getElementById(potId);
+
+          if (!pot.classList.contains("pot")) return;
+
+          // Copy style from pot
+          cell.style.backgroundColor = pot.style.backgroundColor;
+
+          // Structuur-klassen kopiëren
+          cell.className = "test-cell";
+          const structuurClass = Array.from(pot.classList).find(c => c.startsWith("structuur-"));
+          if (structuurClass) {
+            cell.classList.add(structuurClass);
+          }
+        };
+
+        testGrid.appendChild(cell);
+      }
+    }
     </script>
   </body>
 </html>
