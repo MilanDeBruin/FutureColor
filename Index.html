@@ -275,8 +275,10 @@
     <script>
       let ingredientCount = 0;
       let potCount = 0;
-
       let machineTimeInput = 0;
+
+      let multipleMachines = true;
+      let machineRunning = false;
 
       document.addEventListener("DOMContentLoaded", () => {
         const locationInput = document.getElementById("location");
@@ -309,11 +311,13 @@
           const weather = data.liveweer[0].image;
 
           let additionalTime = 0;
+          multipleMachines = true;
 
           if (weather === "regen" || weather === "sneeuw") {
             additionalTime = 0.1;
           } else if (temperature > 35) {
             additionalTime = -0.9;
+            multipleMachines = false;
           } else if (temperature < 10) {
             additionalTime = 0.15;
           }
@@ -483,6 +487,11 @@
           return;
         }
 
+        if(machineRunning && !multipleMachines){
+          alert("Gevaarlijk weer, er mag maar 1 machine per keer draaien.");
+          return;
+        }
+
         const speeds = Array.from(ingredients).map((ing) =>
           parseInt(ing.getAttribute("data-speed"))
         );
@@ -503,7 +512,7 @@
         const structuur = ingredients[0].getAttribute("data-structuur");
 
         machine.innerHTML = `<div class="loader"></div><p style="text-align:center;">Mengen...</p>`;
-
+        machineRunning = true;
         requestAnimationFrame(() => {
           setTimeout(() => {
             const mixedColor = mixColors(colors);
@@ -519,7 +528,8 @@
             resultPot.ondragstart = drag;
 
             document.getElementById("output-container").appendChild(resultPot);
-            machine.innerHTML = "";
+            machine.innerHTML = `<span>Machine ${machine.number}</span>`;
+            machineRunning = false;
           }, effectiveMixTime);
         });
       }
