@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Future Color Simulator</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+      .workspace {
+        display: flex;
+        gap: 20px;
+        padding: 20px;
+      }
+      .ingredients,
+      .pots {
+        width: 45%;
+        border: 1px solid #000;
+        padding: 10px;
+      }
+      .ingredient,
+      .pot {
+        padding: 10px;
+        margin: 5px;
+        cursor: grab;
+        display: inline-block;
+        border-radius: 5px;
+      }
+      .pot {
+        background-color: lightgray;
+        width: 100px;
+        height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      }
+      .pot span {
+        font-size: 12px;
+      }
+
+      /* Structuur visueel maken via border-style */
+      .structuur-korrel {
+        border: 2px dashed black;
+      }
+      .structuur-grove {
+        border: 2px double black;
+      }
+      .structuur-glad {
+        border: 2px solid black;
+      }
+      .structuur-slijmerig {
+        border: 2px dotted black;
+      }
+
+      .form-container {
+        margin: 20px;
+        border: 1px solid #ccc;
+        padding: 10px;
+        width: 400px;
+      }
+
+      label {
+        display: block;
+        margin-top: 10px;
+      }
+
+      input,
+      select {
+        width: 100%;
+      }
+
+      .machine {
+        width: 120px;
+        height: 120px;
+        background-color: #e0e0e0;
+        border: 2px solid #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .machine.processing {
+        animation: spin 2s linear infinite;
+      }
+
+      .loader {
+        border: 6px solid #f3f3f3;
+        border-top: 6px solid #333;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: auto;
+        margin-top: 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Future Color Simulator</h1>
+
+    <div class="form-container">
+      <h2>Nieuw ingrediënt maken</h2>
+      <label
+        >Kleurtype:
+        <select id="colorType">
+          <option value="rgb">RGB</option>
+          <option value="hsl">HSL</option>
+        </select>
+      </label>
+      <label
+        >Kleurwaarde (bijv: 255,0,0 of 120,100%,50%):
+        <input id="colorValue" placeholder="bv. 255,0,0 of 120,100%,50%" />
+      </label>
+      <label
+        >Minimale mengtijd (ms):
+        <input type="number" id="minMixTime" value="1000" />
+      </label>
+      <label
+        >Mengsnelheid:
+        <input type="number" id="mixSpeed" value="1" />
+      </label>
+      <label
+        >Structuur:
+        <select id="structuur">
+          <option value="korrel">Korrel</option>
+          <option value="grove">Grove korrel</option>
+          <option value="glad">Glad</option>
+          <option value="slijmerig">Slijmerig</option>
+        </select>
+      </label>
+      <button onclick="createRandomIngredient()">Willekeurig ingrediënt</button>
+
+      <button onclick="createIngredient()">Voeg ingrediënt toe</button>
+      <button onclick="createPot()">Voeg pot toe</button>
+    </div>
+
+    <div class="workspace">
+      <div class="ingredients">
+        <h2>Ingrediënten</h2>
+        <div id="ingredients-container"></div>
+      </div>
+      <div class="pots">
+        <h2>Potten</h2>
+        <div id="pots-container"></div>
+      </div>
+    </div>
+
+    <!-- Radio buttons voor de hallen -->
+    <input
+      type="radio"
+      name="hall"
+      id="hall1Radio"
+      onchange="showHall('hall1')"
+      checked
+    />
+    Hal 1
+    <input
+      type="radio"
+      name="hall"
+      id="hall2Radio"
+      onchange="showHall('hall2')"
+    />
+    Hal 2
+
+    <!-- Divs voor de hallen -->
+    <div id="hall1" class="hall">Inhoud van Hal 1</div>
+    <div id="hall2" class="hall" style="display: none">Inhoud van Hal 2</div>
+
+    <div class="form-container">
+      <h2>Nieuwe mengmachine</h2>
+      <label
+        >Mengsnelheid: <input type="number" id="machineSpeed" value="1"
+      /></label>
+      <label
+        >Mengtijd (ms): <input type="number" id="machineTime" value="2000"
+      /></label>
+      <button onclick="createMachine()">Voeg mengmachine toe</button>
+    </div>
+
+    <div class="workspace">
+      <div class="machines">
+        <h2>Mengmachines</h2>
+        <div id="machines-container" style="display: flex; gap: 20px"></div>
+      </div>
+    </div>
+
+    <h2>Gemengde resultaten</h2>
+    <div id="output-container" class="workspace"></div>
+
+    <script>
+
+      
+
+      let ingredientCount = 0;
+      let potCount = 0;
+
+      function createIngredient() {
+        const colorType = document.getElementById("colorType").value;
+        const colorValue = document.getElementById("colorValue").value;
+        const minMixTime = parseInt(
+          document.getElementById("minMixTime").value
+        );
+        const mixSpeed = parseInt(document.getElementById("mixSpeed").value);
+        const structuur = document.getElementById("structuur").value;
+
+        const ingredient = document.createElement("div");
+        ingredient.className = `ingredient structuur-${structuur}`;
+        ingredient.textContent = "Ingrediënt " + ++ingredientCount;
+        ingredient.id = "ingredient-" + ingredientCount;
+        ingredient.draggable = true;
+
+        const color =
+          colorType === "rgb" ? `rgb(${colorValue})` : `hsl(${colorValue})`;
+
+        ingredient.style.backgroundColor = color;
+        ingredient.setAttribute("data-color", color);
+        ingredient.setAttribute("data-mintime", minMixTime);
+        ingredient.setAttribute("data-speed", mixSpeed);
+        ingredient.setAttribute("data-structuur", structuur);
+        ingredient.ondragstart = drag;
+
+        document
+          .getElementById("ingredients-container")
+          .appendChild(ingredient);
+      }
+
+      function createPot() {
+        const pot = document.createElement("div");
+        pot.className = "pot";
+        pot.id = "pot-" + ++potCount;
+        pot.dataset.colors = JSON.stringify([]);
+        pot.innerHTML = `<span>Pot ${potCount}</span>`;
+
+        // Zorg dat pot zelf dragbaar is
+        pot.draggable = true;
+        pot.ondragstart = drag;
+
+        // En dat je nog steeds ingrediënten erin kunt slepen
+        pot.ondragover = allowDrop;
+        pot.ondrop = drop;
+
+        document.getElementById("pots-container").appendChild(pot);
+      }
+
+      function allowDrop(event) {
+        event.preventDefault();
+      }
+
+      function drag(event) {
+        event.dataTransfer.setData("text/plain", event.target.id);
+      }
+
+      function drop(event) {
+        event.preventDefault();
+        const ingredientId = event.dataTransfer.getData("text");
+        const ingredient = document.getElementById(ingredientId);
+        const pot = event.currentTarget;
+
+        const ingredientSpeed = ingredient.getAttribute("data-speed");
+        const potIngredients = pot.querySelectorAll(".ingredient");
+
+        if (potIngredients.length > 0) {
+          const existingSpeed = potIngredients[0].getAttribute("data-speed");
+          if (ingredientSpeed !== existingSpeed) {
+            alert(
+              "Ingrediënten met verschillende mengsnelheden kunnen niet worden gemengd."
+            );
+            return;
+          }
+        }
+
+        // Voeg kleur toe aan pot data
+        const currentColors = JSON.parse(pot.dataset.colors);
+        currentColors.push(ingredient.getAttribute("data-color"));
+        pot.dataset.colors = JSON.stringify(currentColors);
+
+        // Voeg ingrediënt visueel toe aan pot
+        pot.appendChild(ingredient);
+
+        // Bereken gemengde kleur en pas toe op de pot
+        const mixedColor = mixColors(currentColors);
+        pot.style.backgroundColor = mixedColor;
+      }
+
+      function mixColors(colors) {
+        let r = 0,
+          g = 0,
+          b = 0;
+        let count = 0;
+
+        colors.forEach((color) => {
+          if (color.startsWith("rgb")) {
+            const rgb = color.match(/\d+/g);
+            r += parseInt(rgb[0]);
+            g += parseInt(rgb[1]);
+            b += parseInt(rgb[2]);
+            count++;
+          }
+        });
+
+        if (count === 0) return "lightgray";
+
+        r = Math.floor(r / count);
+        g = Math.floor(g / count);
+        b = Math.floor(b / count);
+        return `rgb(${r}, ${g}, ${b})`;
+      }
+      let machineCount = 0;
+
+      function createMachine() {
+        const speed = parseInt(document.getElementById("machineSpeed").value);
+        const time = parseInt(document.getElementById("machineTime").value);
+
+        const machine = document.createElement("div");
+        machine.className = "machine";
+        machine.id = "machine-" + ++machineCount;
+        machine.innerHTML = `<span>Machine ${machineCount}</span>`;
+        machine.setAttribute("data-speed", speed);
+        machine.setAttribute("data-time", time);
+
+        // Zorg dat potten in de machine gesleept kunnen worden
+        machine.ondragover = allowDrop;
+        machine.ondrop = handlePotDrop;
+
+        document.getElementById("machines-container").appendChild(machine);
+      }
+
+      function handlePotDrop(event) {
+        event.preventDefault();
+        const potId = event.dataTransfer.getData("text/plain");
+        const pot = document.getElementById(potId);
+        const machine = event.currentTarget;
+
+        if (!pot.classList.contains("pot")) return;
+
+        const ingredients = pot.querySelectorAll(".ingredient");
+        if (ingredients.length === 0) {
+          alert("Deze pot bevat geen ingrediënten.");
+          return;
+        }
+
+        const speeds = Array.from(ingredients).map((ing) =>
+          parseInt(ing.getAttribute("data-speed"))
+        );
+        const times = Array.from(ingredients).map((ing) =>
+          parseInt(ing.getAttribute("data-mintime"))
+        );
+
+        // Zorg ervoor dat alle snelheden gelijk zijn (zoals je eerder al checkte)
+        const potSpeed = speeds[0];
+        const highestTime = Math.max(...times);
+
+        const machineSpeed = parseInt(machine.getAttribute("data-speed"));
+
+        // 🔄 Bereken mengtijd op basis van snelheid en tijd
+        const effectiveMixTime = highestTime / (potSpeed * machineSpeed);
+
+        const colors = Array.from(ingredients).map((ing) =>
+          ing.getAttribute("data-color")
+        );
+        const structuur = ingredients[0].getAttribute("data-structuur");
+
+        // 🔄 Voeg loader toe aan de machine
+        machine.innerHTML = `<div class="loader"></div><p style="text-align:center;">Mengen...</p>`;
+
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            const mixedColor = mixColors(colors);
+            const resultPot = document.createElement("div");
+            resultPot.className = `pot structuur-${structuur}`;
+            resultPot.innerHTML = `<span>Resultaat</span>`;
+            resultPot.style.backgroundColor = mixedColor;
+
+            document.getElementById("output-container").appendChild(resultPot);
+            machine.innerHTML = ""; // 🧹 Maak machine weer leeg
+          }, effectiveMixTime);
+        });
+      }
+
+      function createRandomIngredient() {
+        const ingredient = document.createElement("div");
+        ingredient.className = "ingredient";
+
+        // Willekeurige RGB kleur genereren
+        const r = Math.floor(Math.random() * 256);
+        const g = Math.floor(Math.random() * 256);
+        const b = Math.floor(Math.random() * 256);
+        const color = `rgb(${r}, ${g}, ${b})`;
+
+        // Willekeurige eigenschappen
+        const minTime = 50000; //Math.floor(Math.random() * 5000) + 1000; // 1000 - 6000 ms
+        const speed = 1; //Math.floor(Math.random() * 5) + 1; // 1 t/m 5
+        const structuurTypes = ["korrel", "grove korrel", "glad", "slijmerig"];
+        const structuur =
+          structuurTypes[Math.floor(Math.random() * structuurTypes.length)];
+
+        // Stijl op basis van structuur
+        let borderStyle;
+        switch (structuur) {
+          case "korrel":
+            borderStyle = "2px dotted #333";
+            break;
+          case "grove korrel":
+            borderStyle = "3px dashed #666";
+            break;
+          case "glad":
+            borderStyle = "2px solid #aaa";
+            break;
+          case "slijmerig":
+            borderStyle = "3px double #444";
+            break;
+        }
+
+        // Toewijzen van eigenschappen aan element
+        ingredient.textContent = `Ingrediënt ${++ingredientCount}`;
+        ingredient.style.backgroundColor = color;
+        ingredient.style.border = borderStyle;
+        ingredient.setAttribute("data-speed", speed);
+        ingredient.setAttribute("data-time", minTime);
+        ingredient.setAttribute("data-color", color);
+        ingredient.setAttribute("data-structuur", structuur);
+        ingredient.setAttribute("draggable", true);
+        ingredient.setAttribute("id", "ingredient-" + ingredientCount);
+        ingredient.ondragstart = drag;
+
+        document
+          .getElementById("ingredients-container")
+          .appendChild(ingredient);
+      }
+
+      function showHall(hallId) {
+        // Verberg beide hallen
+        document.getElementById("hall1").style.display = "none";
+        document.getElementById("hall2").style.display = "none";
+
+        // Toon de geselecteerde hal
+        document.getElementById(hallId).style.display = "block";
+      }
+    </script>
+  </body>
+</html>
