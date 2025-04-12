@@ -1,751 +1,736 @@
 <!DOCTYPE html>
 <html lang="nl">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Future Color Simulator</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Future Color Simulator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    .workspace {
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .ingredients,
+    .pots {
+      width: 45%;
+      border: 1px solid #000;
+      padding: 10px;
+    }
+
+    .ingredient,
+    .pot {
+      padding: 10px;
+      margin: 5px;
+      cursor: grab;
+      display: inline-block;
+      border-radius: 5px;
+    }
+
+    .pot {
+      background-color: lightgray;
+      width: 100px;
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+
+    .pot span {
+      font-size: 12px;
+    }
+
+    .structuur-korrel {
+      border: 2px dashed black;
+    }
+
+    .structuur-grove {
+      border: 2px double black;
+    }
+
+    .structuur-glad {
+      border: 2px solid black;
+    }
+
+    .structuur-slijmerig {
+      border: 2px dotted black;
+    }
+
+    .form-container {
+      margin: 20px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      width: 400px;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+
+    input,
+    select {
+      width: 100%;
+    }
+
+    .machine {
+      width: 120px;
+      height: 120px;
+      background-color: #e0e0e0;
+      border: 2px solid #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .machine.processing {
+      animation: spin 2s linear infinite;
+    }
+
+    .loader {
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #333;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: auto;
+      margin-top: 20px;
+    }
+
+    .popup {
+      position: fixed;
+      top: 20%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      border: 2px solid #333;
+      padding: 20px;
+      z-index: 1000;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .popup .color-box {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .color-swatch {
+      width: 30px;
+      height: 30px;
+      margin-right: 10px;
+      border: 1px solid #aaa;
+    }
+
+    .popup-close {
+      margin-top: 10px;
+      padding: 5px 10px;
+      background: #eee;
+      border: 1px solid #aaa;
+      cursor: pointer;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
       }
 
-      .workspace {
-        display: flex;
-        gap: 20px;
-        padding: 20px;
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
       }
 
-      .ingredients,
-      .pots {
-        width: 45%;
-        border: 1px solid #000;
-        padding: 10px;
+      100% {
+        transform: rotate(360deg);
       }
+    }
+  </style>
+</head>
 
-      .ingredient,
-      .pot {
-        padding: 10px;
-        margin: 5px;
-        cursor: grab;
-        display: inline-block;
-        border-radius: 5px;
-      }
+<body>
+  <h1>Future Color Simulator</h1>
 
-      .pot {
-        background-color: lightgray;
-        width: 100px;
-        height: 100px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-      }
+  <div class="form-container">
+    <h2>Nieuw ingrediënt maken</h2>
+    <label>Kleurtype:
+      <select id="colorType">
+        <option value="rgb">RGB</option>
+        <option value="hsl">HSL</option>
+      </select>
+    </label>
+    <label>Kleurwaarde (bijv: 255,0,0 of 120,100%,50%):
+      <input id="colorValue" placeholder="bv. 255,0,0 of 120,100%,50%" />
+    </label>
+    <label>Minimale mengtijd (ms):
+      <input type="number" id="minMixTime" value="1000" />
+    </label>
+    <label>Mengsnelheid:
+      <input type="number" id="mixSpeed" value="1" />
+    </label>
+    <label>Structuur:
+      <select id="structuur">
+        <option value="korrel">Korrel</option>
+        <option value="grove">Grove korrel</option>
+        <option value="glad">Glad</option>
+        <option value="slijmerig">Slijmerig</option>
+      </select>
+    </label>
+    <button onclick="createRandomIngredient()">Willekeurig ingrediënt</button>
 
-      .pot span {
-        font-size: 12px;
-      }
-      
-      .structuur-korrel {
-        border: 2px dashed black;
-      }
+    <button onclick="createIngredient()">Voeg ingrediënt toe</button>
+    <button onclick="createPot()">Voeg pot toe</button>
+  </div>
 
-      .structuur-grove {
-        border: 2px double black;
-      }
-
-      .structuur-glad {
-        border: 2px solid black;
-      }
-
-      .structuur-slijmerig {
-        border: 2px dotted black;
-      }
-
-      .form-container {
-        margin: 20px;
-        border: 1px solid #ccc;
-        padding: 10px;
-        width: 400px;
-      }
-
-      label {
-        display: block;
-        margin-top: 10px;
-      }
-
-      input,
-      select {
-        width: 100%;
-      }
-
-      .machine {
-        width: 120px;
-        height: 120px;
-        background-color: #e0e0e0;
-        border: 2px solid #000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-        position: relative;
-        overflow: hidden;
-      }
-
-      .machine.processing {
-        animation: spin 2s linear infinite;
-      }
-
-      .loader {
-        border: 6px solid #f3f3f3;
-        border-top: 6px solid #333;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        animation: spin 1s linear infinite;
-        margin: auto;
-        margin-top: 20px;
-      }
-
-      .popup {
-        position: fixed;
-        top: 20%;
-        left: 50%;
-        transform: translateX(-50%);
-        background: white;
-        border: 2px solid #333;
-        padding: 20px;
-        z-index: 1000;
-        border-radius: 8px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-      }
-
-      .popup .color-box {
-        display: flex;
-        align-items: center;
-        margin-bottom: 10px;
-      }
-
-      .color-swatch {
-        width: 30px;
-        height: 30px;
-        margin-right: 10px;
-        border: 1px solid #aaa;
-      }
-
-      .popup-close {
-        margin-top: 10px;
-        padding: 5px 10px;
-        background: #eee;
-        border: 1px solid #aaa;
-        cursor: pointer;
-      }
-
-      @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
-
-        100% {
-          transform: rotate(360deg);
-        }
-      }
-
-      @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
-
-        100% {
-          transform: rotate(360deg);
-        }
-      }
-    </style>
-  </head>
-
-  <body>
-    <h1>Future Color Simulator</h1>
-
-    <div class="form-container">
-      <h2>Nieuw ingrediënt maken</h2>
-      <label
-        >Kleurtype:
-        <select id="colorType">
-          <option value="rgb">RGB</option>
-          <option value="hsl">HSL</option>
-        </select>
-      </label>
-      <label
-        >Kleurwaarde (bijv: 255,0,0 of 120,100%,50%):
-        <input id="colorValue" placeholder="bv. 255,0,0 of 120,100%,50%" />
-      </label>
-      <label
-        >Minimale mengtijd (ms):
-        <input type="number" id="minMixTime" value="1000" />
-      </label>
-      <label
-        >Mengsnelheid:
-        <input type="number" id="mixSpeed" value="1" />
-      </label>
-      <label
-        >Structuur:
-        <select id="structuur">
-          <option value="korrel">Korrel</option>
-          <option value="grove">Grove korrel</option>
-          <option value="glad">Glad</option>
-          <option value="slijmerig">Slijmerig</option>
-        </select>
-      </label>
-      <button onclick="createRandomIngredient()">Willekeurig ingrediënt</button>
-
-      <button onclick="createIngredient()">Voeg ingrediënt toe</button>
-      <button onclick="createPot()">Voeg pot toe</button>
+  <div class="workspace">
+    <div class="ingredients">
+      <h2>Ingrediënten</h2>
+      <div id="ingredients-container"></div>
     </div>
-
-    <div class="workspace">
-      <div class="ingredients">
-        <h2>Ingrediënten</h2>
-        <div id="ingredients-container"></div>
-      </div>
-      <div class="pots">
-        <h2>Potten</h2>
-        <div id="pots-container"></div>
-      </div>
+    <div class="pots">
+      <h2>Potten</h2>
+      <div id="pots-container"></div>
     </div>
+  </div>
 
-    <div class="form-container">
-      <h2>Nieuwe mengmachine</h2>
-      <label>
-        Mengsnelheid: <input type="number" id="machineSpeed" value="1" />
-      </label>
-      <label>
-        Mengtijd (ms): <input type="number" id="machineTime" value="2000" />
-      </label>
-      <button onclick="createMachine()">Voeg mengmachine toe</button>
-    </div>
+  <div class="form-container">
+    <h2>Nieuwe mengmachine</h2>
+    <label>
+      Mengsnelheid: <input type="number" id="machineSpeed" value="1" />
+    </label>
+    <label>
+      Mengtijd (ms): <input type="number" id="machineTime" value="2000" />
+    </label>
+    <button onclick="createMachine()">Voeg mengmachine toe</button>
+  </div>
 
-    <input
-      type="radio"
-      name="hall"
-      id="hall1Radio"
-      onchange="showHall('hall1')"
-      checked
-    />
-    Hal 1
-    <input
-      type="radio"
-      name="hall"
-      id="hall2Radio"
-      onchange="showHall('hall2')"
-    />
-    Hal 2
+  <input type="radio" name="hall" id="hall1Radio" onchange="showHall('hall1')" checked />
+  Hal 1
+  <input type="radio" name="hall" id="hall2Radio" onchange="showHall('hall2')" />
+  Hal 2
 
-    <div id="hall1" class="hall">
-      <h2>Mengmachines</h2>
-      <div id="machines-container-1" class="machines-container"></div>
-    </div>
-    <div id="hall2" class="hall" style="display: none">
-      <h2>Mengmachines</h2>
-      <div id="machines-container-2" class="machines-container"></div>
-    </div>
+  <div id="hall1" class="hall">
+    <h2>Mengmachines</h2>
+    <div id="machines-container-1" class="machines-container"></div>
+  </div>
+  <div id="hall2" class="hall" style="display: none">
+    <h2>Mengmachines</h2>
+    <div id="machines-container-2" class="machines-container"></div>
+  </div>
 
-    <h2>Gemengde resultaten</h2>
-    <div id="output-container" class="workspace"></div>
+  <h2>Gemengde resultaten</h2>
+  <div id="output-container" class="workspace"></div>
 
-    <div class="weather-container">
-      <label
-        >Stad/Locatie:
-        <input type="text" id="location" value="Amsterdam" />
-      </label>
-      <button onclick="updateWeather()">Update Weer</button>
-    </div>
+  <div class="weather-container">
+    <label>Stad/Locatie:
+      <input type="text" id="location" value="Amsterdam" />
+    </label>
+    <button onclick="updateWeather()">Update Weer</button>
+  </div>
 
-    <h2>Kleurentest</h2>
-    <div class="form-container">
-      <label>Rijen: <input type="number" id="gridRows" value="6" /></label>
-      <label>Kolommen: <input type="number" id="gridCols" value="6" /></label>
-      <button onclick="generateTestGrid()">Genereer grid</button>
-    </div>
+  <h2>Kleurentest</h2>
+  <div class="form-container">
+    <label>Rijen: <input type="number" id="gridRows" value="6" /></label>
+    <label>Kolommen: <input type="number" id="gridCols" value="6" /></label>
+    <button onclick="generateTestGrid()">Genereer grid</button>
+  </div>
 
-    <div id="test-grid" style="display: grid; gap: 4px; margin: 20px"></div>
-  </body>
-  </html>
-  
-    <script>
-      let ingredientCount = 0;
-      let potCount = 0;
-      let machineTimeInput = 0;
+  <div id="test-grid" style="display: grid; gap: 4px; margin: 20px"></div>
+</body>
 
-      let multipleMachines = true;
-      let machineRunning = false;
+</html>
 
-      document.addEventListener("DOMContentLoaded", () => {
-        const locationInput = document.getElementById("location");
-        machineTimeInput = document.getElementById("machineTime");
+<script>
+  let ingredientCount = 0;
+  let potCount = 0;
+  let machineTimeInput = 0;
 
-        function showHall() {
-          const selectedRadio = document.querySelector(
-            'input[name="hall"]:checked'
-          );
-          const hallNumber = selectedRadio.id
-            .replace("hall", "")
-            .replace("Radio", "");
-          document.getElementById("hall1").style.display = "none";
-          document.getElementById("hall2").style.display = "none";
-          document.getElementById(`hall${hallNumber}`).style.display = "block";
-        }
+  let multipleMachines = true;
+  let machineRunning = false;
 
-        fetchWeatherData(locationInput.value);
-      });
+  document.addEventListener("DOMContentLoaded", () => {
+    const locationInput = document.getElementById("location");
+    machineTimeInput = document.getElementById("machineTime");
 
-      async function fetchWeatherData(location) {
-        try {
-          const apiKey = `0213b9320d`;
-          const apiUrl = `https://weerlive.nl/api/weerlive_api_v2.php?key=${apiKey}&locatie=${location}`;
+    function showHall() {
+      const selectedRadio = document.querySelector(
+        'input[name="hall"]:checked'
+      );
+      const hallNumber = selectedRadio.id
+        .replace("hall", "")
+        .replace("Radio", "");
+      document.getElementById("hall1").style.display = "none";
+      document.getElementById("hall2").style.display = "none";
+      document.getElementById(`hall${hallNumber}`).style.display = "block";
+    }
 
-          const response = await fetch(apiUrl);
-          const data = await response.json();
+    fetchWeatherData(locationInput.value);
+  });
 
-          const temperature = data.liveweer[0].temp;
-          const weather = data.liveweer[0].image;
+  async function fetchWeatherData(location) {
+    try {
+      const apiKey = `0213b9320d`;
+      const apiUrl = `https://weerlive.nl/api/weerlive_api_v2.php?key=${apiKey}&locatie=${location}`;
 
-          let additionalTime = 0;
-          multipleMachines = true;
+      const response = await fetch(apiUrl);
+      const data = await response.json();
 
-          if (weather === "regen" || weather === "sneeuw") {
-            additionalTime = 0.1;
-          } else if (temperature > 35) {
-            additionalTime = -0.9;
-            multipleMachines = false;
-          } else if (temperature < 10) {
-            additionalTime = 0.15;
-          }
+      const temperature = data.liveweer[0].temp;
+      const weather = data.liveweer[0].image;
 
-          let originalTime = parseInt(machineTimeInput.value);
-          originalTime += originalTime * additionalTime;
+      let additionalTime = 0;
+      multipleMachines = true;
 
-          machineTimeInput.value = originalTime;
-          console.log(`Nieuwe mengtijd: ${originalTime} ms`);
-        } catch (error) {
-          console.error(
-            "Er is iets mis gegaan bij het ophalen van het weer:",
-            error
-          );
-        }
+      if (weather === "regen" || weather === "sneeuw") {
+        additionalTime = 0.1;
+      } else if (temperature > 35) {
+        additionalTime = -0.9;
+        multipleMachines = false;
+      } else if (temperature < 10) {
+        additionalTime = 0.15;
       }
 
-      function updateWeather() {
-        const locationInput = document.getElementById("location");
-        const location = locationInput.value;
-        fetchWeatherData(location);
-      }
+      let originalTime = parseInt(machineTimeInput.value);
+      originalTime += originalTime * additionalTime;
 
-      function createIngredient() {
-        const colorType = document.getElementById("colorType").value;
-        const colorValue = document.getElementById("colorValue").value;
-        const minMixTime = parseInt(
-          document.getElementById("minMixTime").value
+      machineTimeInput.value = originalTime;
+      console.log(`Nieuwe mengtijd: ${originalTime} ms`);
+    } catch (error) {
+      console.error(
+        "Er is iets mis gegaan bij het ophalen van het weer:",
+        error
+      );
+    }
+  }
+
+  function updateWeather() {
+    const locationInput = document.getElementById("location");
+    const location = locationInput.value;
+    fetchWeatherData(location);
+  }
+
+  function createIngredient() {
+    const colorType = document.getElementById("colorType").value;
+    const colorValue = document.getElementById("colorValue").value;
+    const minMixTime = parseInt(
+      document.getElementById("minMixTime").value
+    );
+    const mixSpeed = parseInt(document.getElementById("mixSpeed").value);
+    const structuur = document.getElementById("structuur").value;
+
+    const ingredient = document.createElement("div");
+    ingredient.className = `ingredient structuur-${structuur}`;
+    ingredient.textContent = "Ingrediënt " + ++ingredientCount;
+    ingredient.id = "ingredient-" + ingredientCount;
+    ingredient.draggable = true;
+
+    const color =
+      colorType === "rgb" ? `rgb(${colorValue})` : `hsl(${colorValue})`;
+
+    ingredient.style.backgroundColor = color;
+    ingredient.setAttribute("data-color", color);
+    ingredient.setAttribute("data-mintime", minMixTime);
+    ingredient.setAttribute("data-speed", mixSpeed);
+    ingredient.setAttribute("data-structuur", structuur);
+    ingredient.ondragstart = drag;
+
+    document
+      .getElementById("ingredients-container")
+      .appendChild(ingredient);
+  }
+
+  function createPot() {
+    const pot = document.createElement("div");
+    pot.className = "pot";
+    pot.id = "pot-" + ++potCount;
+    pot.dataset.colors = JSON.stringify([]);
+    pot.innerHTML = `<span>Pot ${potCount}</span>`;
+
+    pot.draggable = true;
+    pot.ondragstart = drag;
+
+    pot.ondragover = allowDrop;
+    pot.ondrop = drop;
+
+    document.getElementById("pots-container").appendChild(pot);
+  }
+
+  function allowDrop(event) {
+    event.preventDefault();
+  }
+
+  function drag(event) {
+    event.dataTransfer.setData("text/plain", event.target.id);
+  }
+
+  function drop(event) {
+    event.preventDefault();
+    const ingredientId = event.dataTransfer.getData("text");
+    const ingredient = document.getElementById(ingredientId);
+    const pot = event.currentTarget;
+
+    const ingredientSpeed = ingredient.getAttribute("data-speed");
+    const potIngredients = pot.querySelectorAll(".ingredient");
+
+    if (potIngredients.length > 0) {
+      const existingSpeed = potIngredients[0].getAttribute("data-speed");
+      if (ingredientSpeed !== existingSpeed) {
+        alert(
+          "Ingrediënten met verschillende mengsnelheden kunnen niet worden gemengd."
         );
-        const mixSpeed = parseInt(document.getElementById("mixSpeed").value);
-        const structuur = document.getElementById("structuur").value;
-
-        const ingredient = document.createElement("div");
-        ingredient.className = `ingredient structuur-${structuur}`;
-        ingredient.textContent = "Ingrediënt " + ++ingredientCount;
-        ingredient.id = "ingredient-" + ingredientCount;
-        ingredient.draggable = true;
-
-        const color =
-          colorType === "rgb" ? `rgb(${colorValue})` : `hsl(${colorValue})`;
-
-        ingredient.style.backgroundColor = color;
-        ingredient.setAttribute("data-color", color);
-        ingredient.setAttribute("data-mintime", minMixTime);
-        ingredient.setAttribute("data-speed", mixSpeed);
-        ingredient.setAttribute("data-structuur", structuur);
-        ingredient.ondragstart = drag;
-
-        document
-          .getElementById("ingredients-container")
-          .appendChild(ingredient);
+        return;
       }
+    }
 
-      function createPot() {
-        const pot = document.createElement("div");
-        pot.className = "pot";
-        pot.id = "pot-" + ++potCount;
-        pot.dataset.colors = JSON.stringify([]);
-        pot.innerHTML = `<span>Pot ${potCount}</span>`;
+    const currentColors = JSON.parse(pot.dataset.colors);
+    currentColors.push(ingredient.getAttribute("data-color"));
+    pot.dataset.colors = JSON.stringify(currentColors);
 
-        pot.draggable = true;
-        pot.ondragstart = drag;
+    pot.appendChild(ingredient);
+  }
 
-        pot.ondragover = allowDrop;
-        pot.ondrop = drop;
+  function mixColors(colors) {
+    let r = 0,
+      g = 0,
+      b = 0;
+    let count = 0;
 
-        document.getElementById("pots-container").appendChild(pot);
+    colors.forEach((color) => {
+      if (color.startsWith("rgb")) {
+        const rgb = color.match(/\d+/g);
+        r += parseInt(rgb[0]);
+        g += parseInt(rgb[1]);
+        b += parseInt(rgb[2]);
+        count++;
       }
+    });
 
-      function allowDrop(event) {
-        event.preventDefault();
-      }
+    if (count === 0) return "lightgray";
 
-      function drag(event) {
-        event.dataTransfer.setData("text/plain", event.target.id);
-      }
+    r = Math.floor(r / count);
+    g = Math.floor(g / count);
+    b = Math.floor(b / count);
+    return `rgb(${r}, ${g}, ${b})`;
+  }
+  let machineCount = 0;
 
-      function drop(event) {
-        event.preventDefault();
-        const ingredientId = event.dataTransfer.getData("text");
-        const ingredient = document.getElementById(ingredientId);
-        const pot = event.currentTarget;
+  function createMachine() {
+    const speed = parseInt(document.getElementById("machineSpeed").value);
+    const time = parseInt(document.getElementById("machineTime").value);
 
-        const ingredientSpeed = ingredient.getAttribute("data-speed");
-        const potIngredients = pot.querySelectorAll(".ingredient");
+    const machine = document.createElement("div");
+    machine.className = "machine";
+    machine.id = "machine-" + ++machineCount;
+    machine.number = machineCount;
+    machine.innerHTML = `<span>Machine ${machine.number}</span>`;
+    machine.setAttribute("data-speed", speed);
+    machine.setAttribute("data-time", time);
 
-        if (potIngredients.length > 0) {
-          const existingSpeed = potIngredients[0].getAttribute("data-speed");
-          if (ingredientSpeed !== existingSpeed) {
-            alert(
-              "Ingrediënten met verschillende mengsnelheden kunnen niet worden gemengd."
-            );
-            return;
-          }
-        }
+    machine.ondragover = allowDrop;
+    machine.ondrop = handlePotDrop;
 
-        const currentColors = JSON.parse(pot.dataset.colors);
-        currentColors.push(ingredient.getAttribute("data-color"));
-        pot.dataset.colors = JSON.stringify(currentColors);
+    const activeHall = document.querySelector(
+      'input[name="hall"]:checked'
+    ).id;
 
-        pot.appendChild(ingredient);
-      }
+    const hallNumber = activeHall.replace("hall", "").replace("Radio", "");
 
-      function mixColors(colors) {
-        let r = 0,
-          g = 0,
-          b = 0;
-        let count = 0;
+    const machineContainer = document.getElementById(
+      `machines-container-${hallNumber}`
+    );
+    machineContainer.appendChild(machine);
+  }
 
-        colors.forEach((color) => {
-          if (color.startsWith("rgb")) {
-            const rgb = color.match(/\d+/g);
-            r += parseInt(rgb[0]);
-            g += parseInt(rgb[1]);
-            b += parseInt(rgb[2]);
-            count++;
-          }
-        });
+  function handlePotDrop(event) {
+    event.preventDefault();
+    const potId = event.dataTransfer.getData("text/plain");
+    const pot = document.getElementById(potId);
+    const machine = event.currentTarget;
 
-        if (count === 0) return "lightgray";
+    if (!pot.classList.contains("pot")) return;
 
-        r = Math.floor(r / count);
-        g = Math.floor(g / count);
-        b = Math.floor(b / count);
-        return `rgb(${r}, ${g}, ${b})`;
-      }
-      let machineCount = 0;
+    const ingredients = pot.querySelectorAll(".ingredient");
+    if (ingredients.length === 0) {
+      alert("Deze pot bevat geen ingrediënten.");
+      return;
+    }
 
-      function createMachine() {
-        const speed = parseInt(document.getElementById("machineSpeed").value);
-        const time = parseInt(document.getElementById("machineTime").value);
+    if (machineRunning && !multipleMachines) {
+      alert("Gevaarlijk weer, er mag maar 1 machine per keer draaien.");
+      return;
+    }
 
-        const machine = document.createElement("div");
-        machine.className = "machine";
-        machine.id = "machine-" + ++machineCount;
-        machine.number = machineCount;
+    const speeds = Array.from(ingredients).map((ing) =>
+      parseInt(ing.getAttribute("data-speed"))
+    );
+    const times = Array.from(ingredients).map((ing) =>
+      parseInt(ing.getAttribute("data-mintime"))
+    );
+
+    const potSpeed = speeds[0];
+    const highestTime = Math.max(...times);
+
+    const machineSpeed = parseInt(machine.getAttribute("data-speed"));
+
+    const effectiveMixTime = highestTime / (potSpeed * machineSpeed);
+
+    const colors = Array.from(ingredients).map((ing) =>
+      ing.getAttribute("data-color")
+    );
+    const structuur = ingredients[0].getAttribute("data-structuur");
+
+    machine.innerHTML = `<div class="loader"></div><p style="text-align:center;">Mengen...</p>`;
+    machineRunning = true;
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        const mixedColor = mixColors(colors);
+        const resultPot = document.createElement("div");
+        resultPot.className = `pot structuur-${structuur}`;
+        resultPot.innerHTML = `<span>Resultaat</span>`;
+        resultPot.style.backgroundColor = mixedColor;
+
+        const resultId = "result-pot-" + Date.now();
+        resultPot.id = resultId;
+
+        resultPot.draggable = true;
+        resultPot.ondragstart = drag;
+
+        document.getElementById("output-container").appendChild(resultPot);
         machine.innerHTML = `<span>Machine ${machine.number}</span>`;
-        machine.setAttribute("data-speed", speed);
-        machine.setAttribute("data-time", time);
+        machineRunning = false;
+      }, effectiveMixTime);
+    });
+  }
 
-        machine.ondragover = allowDrop;
-        machine.ondrop = handlePotDrop;
+  function createRandomIngredient() {
+    const ingredient = document.createElement("div");
+    ingredient.className = "ingredient";
 
-        const activeHall = document.querySelector(
-          'input[name="hall"]:checked'
-        ).id;
+    const r = Math.floor(Math.random() * 256);
+    const g = Math.floor(Math.random() * 256);
+    const b = Math.floor(Math.random() * 256);
+    const color = `rgb(${r}, ${g}, ${b})`;
 
-        const hallNumber = activeHall.replace("hall", "").replace("Radio", "");
+    const minTime = 50000;
+    const speed = 1;
+    const structuurTypes = ["korrel", "grove korrel", "glad", "slijmerig"];
+    const structuur =
+      structuurTypes[Math.floor(Math.random() * structuurTypes.length)];
 
-        const machineContainer = document.getElementById(
-          `machines-container-${hallNumber}`
-        );
-        machineContainer.appendChild(machine);
-      }
+    let borderStyle;
+    switch (structuur) {
+      case "korrel":
+        borderStyle = "2px dotted #333";
+        break;
+      case "grove korrel":
+        borderStyle = "3px dashed #666";
+        break;
+      case "glad":
+        borderStyle = "2px solid #aaa";
+        break;
+      case "slijmerig":
+        borderStyle = "3px double #444";
+        break;
+    }
 
-      function handlePotDrop(event) {
+    ingredient.textContent = `Ingrediënt ${++ingredientCount}`;
+    ingredient.style.backgroundColor = color;
+    ingredient.style.border = borderStyle;
+    ingredient.setAttribute("data-speed", speed);
+    ingredient.setAttribute("data-time", minTime);
+    ingredient.setAttribute("data-color", color);
+    ingredient.setAttribute("data-structuur", structuur);
+    ingredient.setAttribute("draggable", true);
+    ingredient.setAttribute("id", "ingredient-" + ingredientCount);
+    ingredient.ondragstart = drag;
+
+    document
+      .getElementById("ingredients-container")
+      .appendChild(ingredient);
+  }
+
+  function showHall() {
+    const selectedRadio = document.querySelector(
+      'input[name="hall"]:checked'
+    );
+
+    const hallNumber = selectedRadio.id
+      .replace("hall", "")
+      .replace("Radio", "");
+
+    document.getElementById("hall1").style.display = "none";
+    document.getElementById("hall2").style.display = "none";
+
+    document.getElementById(`hall${hallNumber}`).style.display = "block";
+  }
+
+  function generateTestGrid() {
+    const rows = parseInt(document.getElementById("gridRows").value);
+    const cols = parseInt(document.getElementById("gridCols").value);
+
+    const testGrid = document.getElementById("test-grid");
+    testGrid.innerHTML = "";
+    testGrid.style.gridTemplateRows = `repeat(${rows}, 50px)`;
+    testGrid.style.gridTemplateColumns = `repeat(${cols}, 50px)`;
+
+    for (let i = 0; i < rows * cols; i++) {
+      const cell = document.createElement("div");
+      cell.className = "test-cell";
+      cell.style.width = "50px";
+      cell.style.height = "50px";
+      cell.style.border = "1px solid #ccc";
+      cell.style.backgroundColor = "white";
+
+      cell.onclick = function () {
+        if (cell.style.backgroundColor !== "white") {
+          showTriadicPopup(cell.style.backgroundColor);
+        }
+      };
+
+      cell.ondragover = allowDrop;
+      cell.ondrop = function (event) {
         event.preventDefault();
         const potId = event.dataTransfer.getData("text/plain");
         const pot = document.getElementById(potId);
-        const machine = event.currentTarget;
 
         if (!pot.classList.contains("pot")) return;
 
-        const ingredients = pot.querySelectorAll(".ingredient");
-        if (ingredients.length === 0) {
-          alert("Deze pot bevat geen ingrediënten.");
-          return;
-        }
+        cell.style.backgroundColor = pot.style.backgroundColor;
 
-        if(machineRunning && !multipleMachines){
-          alert("Gevaarlijk weer, er mag maar 1 machine per keer draaien.");
-          return;
-        }
-
-        const speeds = Array.from(ingredients).map((ing) =>
-          parseInt(ing.getAttribute("data-speed"))
+        cell.className = "test-cell";
+        const structuurClass = Array.from(pot.classList).find((c) =>
+          c.startsWith("structuur-")
         );
-        const times = Array.from(ingredients).map((ing) =>
-          parseInt(ing.getAttribute("data-mintime"))
+        if (structuurClass) {
+          cell.classList.add(structuurClass);
+        }
+        if (cell.style.backgroundColor !== "white") {
+          showTriadicPopup(cell.style.backgroundColor);
+        }
+      };
+
+      cell.ondragover = allowDrop;
+      cell.ondrop = function (event) {
+        event.preventDefault();
+        const potId = event.dataTransfer.getData("text/plain");
+        const pot = document.getElementById(potId);
+
+        if (!pot.classList.contains("pot")) return;
+
+        cell.style.backgroundColor = pot.style.backgroundColor;
+
+        cell.className = "test-cell";
+        const structuurClass = Array.from(pot.classList).find((c) =>
+          c.startsWith("structuur-")
         );
-
-        const potSpeed = speeds[0];
-        const highestTime = Math.max(...times);
-
-        const machineSpeed = parseInt(machine.getAttribute("data-speed"));
-
-        const effectiveMixTime = highestTime / (potSpeed * machineSpeed);
-
-        const colors = Array.from(ingredients).map((ing) =>
-          ing.getAttribute("data-color")
-        );
-        const structuur = ingredients[0].getAttribute("data-structuur");
-
-        machine.innerHTML = `<div class="loader"></div><p style="text-align:center;">Mengen...</p>`;
-        machineRunning = true;
-        requestAnimationFrame(() => {
-          setTimeout(() => {
-            const mixedColor = mixColors(colors);
-            const resultPot = document.createElement("div");
-            resultPot.className = `pot structuur-${structuur}`;
-            resultPot.innerHTML = `<span>Resultaat</span>`;
-            resultPot.style.backgroundColor = mixedColor;
-
-            const resultId = "result-pot-" + Date.now();
-            resultPot.id = resultId;
-
-            resultPot.draggable = true;
-            resultPot.ondragstart = drag;
-
-            document.getElementById("output-container").appendChild(resultPot);
-            machine.innerHTML = `<span>Machine ${machine.number}</span>`;
-            machineRunning = false;
-          }, effectiveMixTime);
-        });
-      }
-
-      function createRandomIngredient() {
-        const ingredient = document.createElement("div");
-        ingredient.className = "ingredient";
-
-        const r = Math.floor(Math.random() * 256);
-        const g = Math.floor(Math.random() * 256);
-        const b = Math.floor(Math.random() * 256);
-        const color = `rgb(${r}, ${g}, ${b})`;
-
-        const minTime = 50000; 
-        const speed = 1;
-        const structuurTypes = ["korrel", "grove korrel", "glad", "slijmerig"];
-        const structuur =
-          structuurTypes[Math.floor(Math.random() * structuurTypes.length)];
-
-        let borderStyle;
-        switch (structuur) {
-          case "korrel":
-            borderStyle = "2px dotted #333";
-            break;
-          case "grove korrel":
-            borderStyle = "3px dashed #666";
-            break;
-          case "glad":
-            borderStyle = "2px solid #aaa";
-            break;
-          case "slijmerig":
-            borderStyle = "3px double #444";
-            break;
+        if (structuurClass) {
+          cell.classList.add(structuurClass);
         }
+      };
 
-        ingredient.textContent = `Ingrediënt ${++ingredientCount}`;
-        ingredient.style.backgroundColor = color;
-        ingredient.style.border = borderStyle;
-        ingredient.setAttribute("data-speed", speed);
-        ingredient.setAttribute("data-time", minTime);
-        ingredient.setAttribute("data-color", color);
-        ingredient.setAttribute("data-structuur", structuur);
-        ingredient.setAttribute("draggable", true);
-        ingredient.setAttribute("id", "ingredient-" + ingredientCount);
-        ingredient.ondragstart = drag;
+      testGrid.appendChild(cell);
+    }
+  }
 
-        document
-          .getElementById("ingredients-container")
-          .appendChild(ingredient);
+  function rgbToHsl(r, g, b) {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+    let max = Math.max(r, g, b),
+      min = Math.min(r, g, b);
+    let h,
+      s,
+      l = (max + min) / 2;
+
+    if (max === min) {
+      h = s = 0;
+    } else {
+      let d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r:
+          h = (g - b) / d + (g < b ? 6 : 0);
+          break;
+        case g:
+          h = (b - r) / d + 2;
+          break;
+        case b:
+          h = (r - g) / d + 4;
+          break;
       }
+      h *= 60;
+    }
 
-      function showHall() {
-        const selectedRadio = document.querySelector(
-          'input[name="hall"]:checked'
-        );
+    return [Math.round(h), Math.round(s * 100), Math.round(l * 100)];
+  }
 
-        const hallNumber = selectedRadio.id
-          .replace("hall", "")
-          .replace("Radio", "");
+  function hslToRgb(h, s, l) {
+    s /= 100;
+    l /= 100;
+    let c = (1 - Math.abs(2 * l - 1)) * s;
+    let x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+    let m = l - c / 2;
+    let r = 0,
+      g = 0,
+      b = 0;
 
-        document.getElementById("hall1").style.display = "none";
-        document.getElementById("hall2").style.display = "none";
+    if (h >= 0 && h < 60) {
+      r = c;
+      g = x;
+    } else if (h < 120) {
+      r = x;
+      g = c;
+    } else if (h < 180) {
+      g = c;
+      b = x;
+    } else if (h < 240) {
+      g = x;
+      b = c;
+    } else if (h < 300) {
+      r = x;
+      b = c;
+    } else {
+      r = c;
+      b = x;
+    }
 
-        document.getElementById(`hall${hallNumber}`).style.display = "block";
-      }
+    r = Math.round((r + m) * 255);
+    g = Math.round((g + m) * 255);
+    b = Math.round((b + m) * 255);
+    return [r, g, b];
+  }
 
-      function generateTestGrid() {
-        const rows = parseInt(document.getElementById("gridRows").value);
-        const cols = parseInt(document.getElementById("gridCols").value);
+  function showTriadicPopup(originalColor) {
+    const rgb = originalColor.match(/\d+/g).map(Number);
+    const [h, s, l] = rgbToHsl(rgb[0], rgb[1], rgb[2]);
 
-        const testGrid = document.getElementById("test-grid");
-        testGrid.innerHTML = "";
-        testGrid.style.gridTemplateRows = `repeat(${rows}, 50px)`;
-        testGrid.style.gridTemplateColumns = `repeat(${cols}, 50px)`;
+    const triad1H = (h + 120) % 360;
+    const triad2H = (h + 240) % 360;
 
-        for (let i = 0; i < rows * cols; i++) {
-          const cell = document.createElement("div");
-          cell.className = "test-cell";
-          cell.style.width = "50px";
-          cell.style.height = "50px";
-          cell.style.border = "1px solid #ccc";
-          cell.style.backgroundColor = "white";
+    const [r1, g1, b1] = hslToRgb(triad1H, s, l);
+    const [r2, g2, b2] = hslToRgb(triad2H, s, l);
 
-          cell.onclick = function () {
-            if (cell.style.backgroundColor !== "white") {
-              showTriadicPopup(cell.style.backgroundColor);
-            }
-          };
+    const color1 = `rgb(${r1}, ${g1}, ${b1})`;
+    const color2 = `rgb(${r2}, ${g2}, ${b2})`;
 
-          cell.ondragover = allowDrop;
-          cell.ondrop = function (event) {
-            event.preventDefault();
-            const potId = event.dataTransfer.getData("text/plain");
-            const pot = document.getElementById(potId);
+    const popup = document.createElement("div");
+    popup.className = "popup";
 
-            if (!pot.classList.contains("pot")) return;
-
-            cell.style.backgroundColor = pot.style.backgroundColor;
-
-            cell.className = "test-cell";
-            const structuurClass = Array.from(pot.classList).find((c) =>
-              c.startsWith("structuur-")
-            );
-            if (structuurClass) {
-              cell.classList.add(structuurClass);
-            }
-            if (cell.style.backgroundColor !== "white") {
-              showTriadicPopup(cell.style.backgroundColor);
-            }
-          };
-
-          cell.ondragover = allowDrop;
-          cell.ondrop = function (event) {
-            event.preventDefault();
-            const potId = event.dataTransfer.getData("text/plain");
-            const pot = document.getElementById(potId);
-
-            if (!pot.classList.contains("pot")) return;
-
-            cell.style.backgroundColor = pot.style.backgroundColor;
-
-            cell.className = "test-cell";
-            const structuurClass = Array.from(pot.classList).find((c) =>
-              c.startsWith("structuur-")
-            );
-            if (structuurClass) {
-              cell.classList.add(structuurClass);
-            }
-          };
-
-          testGrid.appendChild(cell);
-        }
-      }
-
-      function rgbToHsl(r, g, b) {
-        r /= 255;
-        g /= 255;
-        b /= 255;
-        let max = Math.max(r, g, b),
-          min = Math.min(r, g, b);
-        let h,
-          s,
-          l = (max + min) / 2;
-
-        if (max === min) {
-          h = s = 0;
-        } else {
-          let d = max - min;
-          s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-          switch (max) {
-            case r:
-              h = (g - b) / d + (g < b ? 6 : 0);
-              break;
-            case g:
-              h = (b - r) / d + 2;
-              break;
-            case b:
-              h = (r - g) / d + 4;
-              break;
-          }
-          h *= 60;
-        }
-
-        return [Math.round(h), Math.round(s * 100), Math.round(l * 100)];
-      }
-
-      function hslToRgb(h, s, l) {
-        s /= 100;
-        l /= 100;
-        let c = (1 - Math.abs(2 * l - 1)) * s;
-        let x = c * (1 - Math.abs(((h / 60) % 2) - 1));
-        let m = l - c / 2;
-        let r = 0,
-          g = 0,
-          b = 0;
-
-        if (h >= 0 && h < 60) {
-          r = c;
-          g = x;
-        } else if (h < 120) {
-          r = x;
-          g = c;
-        } else if (h < 180) {
-          g = c;
-          b = x;
-        } else if (h < 240) {
-          g = x;
-          b = c;
-        } else if (h < 300) {
-          r = x;
-          b = c;
-        } else {
-          r = c;
-          b = x;
-        }
-
-        r = Math.round((r + m) * 255);
-        g = Math.round((g + m) * 255);
-        b = Math.round((b + m) * 255);
-        return [r, g, b];
-      }
-
-      function showTriadicPopup(originalColor) {
-        const rgb = originalColor.match(/\d+/g).map(Number);
-        const [h, s, l] = rgbToHsl(rgb[0], rgb[1], rgb[2]);
-
-        const triad1H = (h + 120) % 360;
-        const triad2H = (h + 240) % 360;
-
-        const [r1, g1, b1] = hslToRgb(triad1H, s, l);
-        const [r2, g2, b2] = hslToRgb(triad2H, s, l);
-
-        const color1 = `rgb(${r1}, ${g1}, ${b1})`;
-        const color2 = `rgb(${r2}, ${g2}, ${b2})`;
-
-        const popup = document.createElement("div");
-        popup.className = "popup";
-
-        popup.innerHTML = `
+    popup.innerHTML = `
     <h3>Triadic Kleurenadvies</h3>
     <div class="color-box"><div class="color-swatch" style="background:${originalColor}"></div> Origineel: ${originalColor}</div>
     <div class="color-box"><div class="color-swatch" style="background:${color1}"></div> Advies 1: ${color1}</div>
@@ -753,6 +738,6 @@
     <button class="popup-close" onclick="this.parentElement.remove()">Sluiten</button>
   `;
 
-        document.body.appendChild(popup);
-      }
-    </script>
+    document.body.appendChild(popup);
+  }
+</script>
