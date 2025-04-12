@@ -166,7 +166,6 @@
       </div>
     </div>
 
-
     <!-- Formulier voor het aanmaken van een machine -->
     <div class="form-container">
       <h2>Nieuwe mengmachine</h2>
@@ -178,7 +177,6 @@
       </label>
       <button onclick="createMachine()">Voeg mengmachine toe</button>
     </div>
-
 
     <!-- Radio buttons voor de hallen -->
     <input
@@ -207,23 +205,91 @@
       <div id="machines-container-2" class="machines-container"></div>
     </div>
 
-
-
     <h2>Gemengde resultaten</h2>
     <div id="output-container" class="workspace"></div>
 
-    <h2>Kleurentest</h2>
-  <div class="form-container">
-    <label>Rijen: <input type="number" id="gridRows" value="6" /></label>
-    <label>Kolommen: <input type="number" id="gridCols" value="6" /></label>
-    <button onclick="generateTestGrid()">Genereer grid</button>
-  </div>
-
-  <div id="test-grid" style="display: grid; gap: 4px; margin: 20px;"></div>
+    <!-- Div voor het weer en het aanpassen van locatie -->
+    <div class="weather-container">
+      <label
+        >Stad/Locatie:
+        <input type="text" id="location" value="Amsterdam" />
+      </label>
+      <button onclick="updateWeather()">Update Weer</button>
+    </div>
 
     <script>
       let ingredientCount = 0;
       let potCount = 0;
+
+      let machineTimeInput = 0;
+
+      document.addEventListener("DOMContentLoaded", () => {
+        // Initialiseer de locatie
+        const locationInput = document.getElementById("location");
+        machineTimeInput = document.getElementById("machineTime");
+
+        // Toon de hal op basis van geselecteerde radio
+        function showHall() {
+          const selectedRadio = document.querySelector(
+            'input[name="hall"]:checked'
+          );
+          const hallNumber = selectedRadio.id
+            .replace("hall", "")
+            .replace("Radio", "");
+          document.getElementById("hall1").style.display = "none";
+          document.getElementById("hall2").style.display = "none";
+          document.getElementById(`hall${hallNumber}`).style.display = "block";
+        }
+
+        // Haal weer op bij het laden van de pagina
+        fetchWeatherData(locationInput.value);
+      });
+
+      // Haal weergegevens op en pas de mengtijd aan
+      async function fetchWeatherData(location) {
+        try {
+          const apiKey = `0213b9320d`; // Vul je eigen API-key in
+          const apiUrl = `https://weerlive.nl/api/weerlive_api_v2.php?key=${apiKey}&locatie=${location}`;
+
+          const response = await fetch(apiUrl);
+          const data = await response.json();
+
+          console.log(data.liveweer);
+
+          const temperature = data.liveweer[0].temp;
+          const weather = data.liveweer[0].image;
+
+          let additionalTime = 0;
+
+          // Pas de mengtijd aan op basis van het weer
+          if (weather === "regen" || weather === "sneeuw") {
+            additionalTime = 0.1; // 10% langer voor regen/sneeuw
+          } else if (temperature > 35) {
+            additionalTime = -0.9; // Maximum 1 machine draaien bij >35 graden
+          } else if (temperature < 10) {
+            additionalTime = 0.15; // 15% langer onder 10 graden
+          }
+
+          // Verander de mengtijd op basis van het weer
+          let originalTime = parseInt(machineTimeInput.value);
+          originalTime += originalTime * additionalTime;
+
+          machineTimeInput.value = originalTime;
+          console.log(`Nieuwe mengtijd: ${originalTime} ms`);
+        } catch (error) {
+          console.error(
+            "Er is iets mis gegaan bij het ophalen van het weer:",
+            error
+          );
+        }
+      }
+
+      // Functie om de locatie te updaten
+      function updateWeather() {
+        const locationInput = document.getElementById("location");
+        const location = locationInput.value;
+        fetchWeatherData(location);
+      }
 
       function createIngredient() {
         const colorType = document.getElementById("colorType").value;
@@ -356,7 +422,7 @@
           'input[name="hall"]:checked'
         ).id;
 
-        const hallNumber = activeHall.replace('hall', '').replace('Radio', '');
+        const hallNumber = activeHall.replace("hall", "").replace("Radio", "");
 
         const machineContainer = document.getElementById(
           `machines-container-${hallNumber}`
@@ -365,62 +431,60 @@
       }
 
       function handlePotDrop(event) {
-      event.preventDefault();
-      const potId = event.dataTransfer.getData("text/plain");
-      const pot = document.getElementById(potId);
-      const machine = event.currentTarget;
+        event.preventDefault();
+        const potId = event.dataTransfer.getData("text/plain");
+        const pot = document.getElementById(potId);
+        const machine = event.currentTarget;
 
-      if (!pot.classList.contains("pot")) return;
+        if (!pot.classList.contains("pot")) return;
 
-      const ingredients = pot.querySelectorAll(".ingredient");
-      if (ingredients.length === 0) {
-        alert("Deze pot bevat geen ingrediënten.");
-        return;
+        const ingredients = pot.querySelectorAll(".ingredient");
+        if (ingredients.length === 0) {
+          alert("Deze pot bevat geen ingrediënten.");
+          return;
+        }
+
+        const speeds = Array.from(ingredients).map((ing) =>
+          parseInt(ing.getAttribute("data-speed"))
+        );
+        const times = Array.from(ingredients).map((ing) =>
+          parseInt(ing.getAttribute("data-mintime"))
+        );
+
+        const potSpeed = speeds[0];
+        const highestTime = Math.max(...times);
+
+        const machineSpeed = parseInt(machine.getAttribute("data-speed"));
+
+        const effectiveMixTime = highestTime / (potSpeed * machineSpeed);
+
+        const colors = Array.from(ingredients).map((ing) =>
+          ing.getAttribute("data-color")
+        );
+        const structuur = ingredients[0].getAttribute("data-structuur");
+
+        machine.innerHTML = `<div class="loader"></div><p style="text-align:center;">Mengen...</p>`;
+
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            const mixedColor = mixColors(colors);
+            const resultPot = document.createElement("div");
+            resultPot.className = `pot structuur-${structuur}`;
+            resultPot.innerHTML = `<span>Resultaat</span>`;
+            resultPot.style.backgroundColor = mixedColor;
+
+            // ✨ FIX HIER:
+            const resultId = "result-pot-" + Date.now(); // of een andere unieke manier
+            resultPot.id = resultId;
+
+            resultPot.draggable = true;
+            resultPot.ondragstart = drag;
+
+            document.getElementById("output-container").appendChild(resultPot);
+            machine.innerHTML = "";
+          }, effectiveMixTime);
+        });
       }
-
-      const speeds = Array.from(ingredients).map((ing) =>
-        parseInt(ing.getAttribute("data-speed"))
-      );
-      const times = Array.from(ingredients).map((ing) =>
-        parseInt(ing.getAttribute("data-mintime"))
-      );
-
-
-      const potSpeed = speeds[0];
-      const highestTime = Math.max(...times);
-
-      const machineSpeed = parseInt(machine.getAttribute("data-speed"));
-
-      const effectiveMixTime = highestTime / (potSpeed * machineSpeed);
-
-      const colors = Array.from(ingredients).map((ing) =>
-        ing.getAttribute("data-color")
-      );
-      const structuur = ingredients[0].getAttribute("data-structuur");
-
-
-      machine.innerHTML = `<div class="loader"></div><p style="text-align:center;">Mengen...</p>`;
-
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          const mixedColor = mixColors(colors);
-          const resultPot = document.createElement("div");
-          resultPot.className = `pot structuur-${structuur}`;
-          resultPot.innerHTML = `<span>Resultaat</span>`;
-          resultPot.style.backgroundColor = mixedColor;
-
-          // ✨ FIX HIER:
-          const resultId = "result-pot-" + Date.now(); // of een andere unieke manier
-          resultPot.id = resultId;
-
-          resultPot.draggable = true;
-          resultPot.ondragstart = drag;
-
-          document.getElementById("output-container").appendChild(resultPot);
-          machine.innerHTML = "";
-        }, effectiveMixTime);
-      });
-    }
 
       function createRandomIngredient() {
         const ingredient = document.createElement("div");
@@ -492,45 +556,47 @@
       }
 
       function generateTestGrid() {
-      const rows = parseInt(document.getElementById("gridRows").value);
-      const cols = parseInt(document.getElementById("gridCols").value);
+        const rows = parseInt(document.getElementById("gridRows").value);
+        const cols = parseInt(document.getElementById("gridCols").value);
 
-      const testGrid = document.getElementById("test-grid");
-      testGrid.innerHTML = ""; // reset grid
-      testGrid.style.gridTemplateRows = `repeat(${rows}, 50px)`;
-      testGrid.style.gridTemplateColumns = `repeat(${cols}, 50px)`;
+        const testGrid = document.getElementById("test-grid");
+        testGrid.innerHTML = ""; // reset grid
+        testGrid.style.gridTemplateRows = `repeat(${rows}, 50px)`;
+        testGrid.style.gridTemplateColumns = `repeat(${cols}, 50px)`;
 
-      for (let i = 0; i < rows * cols; i++) {
-        const cell = document.createElement("div");
-        cell.className = "test-cell";
-        cell.style.width = "50px";
-        cell.style.height = "50px";
-        cell.style.border = "1px solid #ccc";
-        cell.style.backgroundColor = "white";
-
-        // Drop functionaliteit
-        cell.ondragover = allowDrop;
-        cell.ondrop = function (event) {
-          event.preventDefault();
-          const potId = event.dataTransfer.getData("text/plain");
-          const pot = document.getElementById(potId);
-
-          if (!pot.classList.contains("pot")) return;
-
-          // Copy style from pot
-          cell.style.backgroundColor = pot.style.backgroundColor;
-
-          // Structuur-klassen kopiëren
+        for (let i = 0; i < rows * cols; i++) {
+          const cell = document.createElement("div");
           cell.className = "test-cell";
-          const structuurClass = Array.from(pot.classList).find(c => c.startsWith("structuur-"));
-          if (structuurClass) {
-            cell.classList.add(structuurClass);
-          }
-        };
+          cell.style.width = "50px";
+          cell.style.height = "50px";
+          cell.style.border = "1px solid #ccc";
+          cell.style.backgroundColor = "white";
 
-        testGrid.appendChild(cell);
+          // Drop functionaliteit
+          cell.ondragover = allowDrop;
+          cell.ondrop = function (event) {
+            event.preventDefault();
+            const potId = event.dataTransfer.getData("text/plain");
+            const pot = document.getElementById(potId);
+
+            if (!pot.classList.contains("pot")) return;
+
+            // Copy style from pot
+            cell.style.backgroundColor = pot.style.backgroundColor;
+
+            // Structuur-klassen kopiëren
+            cell.className = "test-cell";
+            const structuurClass = Array.from(pot.classList).find((c) =>
+              c.startsWith("structuur-")
+            );
+            if (structuurClass) {
+              cell.classList.add(structuurClass);
+            }
+          };
+
+          testGrid.appendChild(cell);
+        }
       }
-    }
     </script>
   </body>
 </html>
