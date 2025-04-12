@@ -279,11 +279,9 @@
       let machineTimeInput = 0;
 
       document.addEventListener("DOMContentLoaded", () => {
-        // Initialiseer de locatie
         const locationInput = document.getElementById("location");
         machineTimeInput = document.getElementById("machineTime");
 
-        // Toon de hal op basis van geselecteerde radio
         function showHall() {
           const selectedRadio = document.querySelector(
             'input[name="hall"]:checked'
@@ -296,14 +294,12 @@
           document.getElementById(`hall${hallNumber}`).style.display = "block";
         }
 
-        // Haal weer op bij het laden van de pagina
         fetchWeatherData(locationInput.value);
       });
 
-      // Haal weergegevens op en pas de mengtijd aan
       async function fetchWeatherData(location) {
         try {
-          const apiKey = `0213b9320d`; // Vul je eigen API-key in
+          const apiKey = `0213b9320d`;
           const apiUrl = `https://weerlive.nl/api/weerlive_api_v2.php?key=${apiKey}&locatie=${location}`;
 
           const response = await fetch(apiUrl);
@@ -314,16 +310,14 @@
 
           let additionalTime = 0;
 
-          // Pas de mengtijd aan op basis van het weer
           if (weather === "regen" || weather === "sneeuw") {
-            additionalTime = 0.1; // 10% langer voor regen/sneeuw
+            additionalTime = 0.1;
           } else if (temperature > 35) {
-            additionalTime = -0.9; // Maximum 1 machine draaien bij >35 graden
+            additionalTime = -0.9;
           } else if (temperature < 10) {
-            additionalTime = 0.15; // 15% langer onder 10 graden
+            additionalTime = 0.15;
           }
 
-          // Verander de mengtijd op basis van het weer
           let originalTime = parseInt(machineTimeInput.value);
           originalTime += originalTime * additionalTime;
 
@@ -337,7 +331,6 @@
         }
       }
 
-      // Functie om de locatie te updaten
       function updateWeather() {
         const locationInput = document.getElementById("location");
         const location = locationInput.value;
@@ -381,11 +374,9 @@
         pot.dataset.colors = JSON.stringify([]);
         pot.innerHTML = `<span>Pot ${potCount}</span>`;
 
-        // Zorg dat pot zelf dragbaar is
         pot.draggable = true;
         pot.ondragstart = drag;
 
-        // En dat je nog steeds ingrediënten erin kunt slepen
         pot.ondragover = allowDrop;
         pot.ondrop = drop;
 
@@ -419,12 +410,10 @@
           }
         }
 
-        // Voeg kleur toe aan pot data
         const currentColors = JSON.parse(pot.dataset.colors);
         currentColors.push(ingredient.getAttribute("data-color"));
         pot.dataset.colors = JSON.stringify(currentColors);
 
-        // Voeg ingrediënt visueel toe aan pot
         pot.appendChild(ingredient);
       }
 
@@ -457,7 +446,6 @@
         const speed = parseInt(document.getElementById("machineSpeed").value);
         const time = parseInt(document.getElementById("machineTime").value);
 
-        // Maak de machine aan
         const machine = document.createElement("div");
         machine.className = "machine";
         machine.id = "machine-" + ++machineCount;
@@ -466,11 +454,9 @@
         machine.setAttribute("data-speed", speed);
         machine.setAttribute("data-time", time);
 
-        // Zorg dat potten in de machine gesleept kunnen worden
         machine.ondragover = allowDrop;
         machine.ondrop = handlePotDrop;
 
-        // Vind de actieve hal en voeg de machine toe aan de juiste container
         const activeHall = document.querySelector(
           'input[name="hall"]:checked'
         ).id;
@@ -526,8 +512,7 @@
             resultPot.innerHTML = `<span>Resultaat</span>`;
             resultPot.style.backgroundColor = mixedColor;
 
-            // ✨ FIX HIER:
-            const resultId = "result-pot-" + Date.now(); // of een andere unieke manier
+            const resultId = "result-pot-" + Date.now();
             resultPot.id = resultId;
 
             resultPot.draggable = true;
@@ -543,20 +528,17 @@
         const ingredient = document.createElement("div");
         ingredient.className = "ingredient";
 
-        // Willekeurige RGB kleur genereren
         const r = Math.floor(Math.random() * 256);
         const g = Math.floor(Math.random() * 256);
         const b = Math.floor(Math.random() * 256);
         const color = `rgb(${r}, ${g}, ${b})`;
 
-        // Willekeurige eigenschappen
-        const minTime = 50000; //Math.floor(Math.random() * 5000) + 1000; // 1000 - 6000 ms
-        const speed = 1; //Math.floor(Math.random() * 5) + 1; // 1 t/m 5
+        const minTime = 50000; 
+        const speed = 1;
         const structuurTypes = ["korrel", "grove korrel", "glad", "slijmerig"];
         const structuur =
           structuurTypes[Math.floor(Math.random() * structuurTypes.length)];
 
-        // Stijl op basis van structuur
         let borderStyle;
         switch (structuur) {
           case "korrel":
@@ -573,7 +555,6 @@
             break;
         }
 
-        // Toewijzen van eigenschappen aan element
         ingredient.textContent = `Ingrediënt ${++ingredientCount}`;
         ingredient.style.backgroundColor = color;
         ingredient.style.border = borderStyle;
@@ -591,7 +572,6 @@
       }
 
       function showHall() {
-        // Verkrijg de geselecteerde radio button
         const selectedRadio = document.querySelector(
           'input[name="hall"]:checked'
         );
@@ -600,11 +580,9 @@
           .replace("hall", "")
           .replace("Radio", "");
 
-        // Verberg beide hallen
         document.getElementById("hall1").style.display = "none";
         document.getElementById("hall2").style.display = "none";
 
-        // Toon de geselecteerde hal
         document.getElementById(`hall${hallNumber}`).style.display = "block";
       }
 
@@ -613,7 +591,7 @@
         const cols = parseInt(document.getElementById("gridCols").value);
 
         const testGrid = document.getElementById("test-grid");
-        testGrid.innerHTML = ""; // reset grid
+        testGrid.innerHTML = "";
         testGrid.style.gridTemplateRows = `repeat(${rows}, 50px)`;
         testGrid.style.gridTemplateColumns = `repeat(${cols}, 50px)`;
 
@@ -631,7 +609,6 @@
             }
           };
 
-          // Drop functionaliteit
           cell.ondragover = allowDrop;
           cell.ondrop = function (event) {
             event.preventDefault();
@@ -640,10 +617,8 @@
 
             if (!pot.classList.contains("pot")) return;
 
-            // Copy style from pot
             cell.style.backgroundColor = pot.style.backgroundColor;
 
-            // Structuur-klassen kopiëren
             cell.className = "test-cell";
             const structuurClass = Array.from(pot.classList).find((c) =>
               c.startsWith("structuur-")
@@ -656,7 +631,6 @@
             }
           };
 
-          // Drop functionaliteit
           cell.ondragover = allowDrop;
           cell.ondrop = function (event) {
             event.preventDefault();
@@ -665,10 +639,8 @@
 
             if (!pot.classList.contains("pot")) return;
 
-            // Copy style from pot
             cell.style.backgroundColor = pot.style.backgroundColor;
 
-            // Structuur-klassen kopiëren
             cell.className = "test-cell";
             const structuurClass = Array.from(pot.classList).find((c) =>
               c.startsWith("structuur-")
@@ -693,7 +665,7 @@
           l = (max + min) / 2;
 
         if (max === min) {
-          h = s = 0; // achromatic
+          h = s = 0;
         } else {
           let d = max - min;
           s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
