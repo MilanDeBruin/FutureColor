@@ -5,6 +5,21 @@
       let machineTimeInput = 0;
 
       document.addEventListener("DOMContentLoaded", () => {
+
+        document.getElementById("randomIngredientBtn").addEventListener("click", createRandomIngredient);
+        document.getElementById("addIngredientBtn").addEventListener("click", createIngredient);
+        document.getElementById("addPotBtn").addEventListener("click", createPot);
+        document.getElementById("addMachineBtn").addEventListener("click", createMachine);
+        document.getElementById("updateWeatherBtn").addEventListener("click", updateWeather);
+        document.getElementById("generateGridBtn").addEventListener("click", generateTestGrid);
+            
+        document.getElementById("hall1Radio").addEventListener("change", function() {
+          showHall('hall1');
+        });
+        document.getElementById("hall2Radio").addEventListener("change", function() {
+          showHall('hall2');
+        });
+
         // Initialiseer de locatie
         const locationInput = document.getElementById("location");
         machineTimeInput = document.getElementById("machineTime");

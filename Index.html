@@ -39,10 +39,10 @@
           <option value="slijmerig">Slijmerig</option>
         </select>
       </label>
-      <button onclick="createRandomIngredient()">Willekeurig ingrediënt</button>
+      <button id="randomIngredientBtn">Willekeurig ingrediënt</button>
 
-      <button onclick="createIngredient()">Voeg ingrediënt toe</button>
-      <button onclick="createPot()">Voeg pot toe</button>
+      <button id="addIngredientBtn">Voeg ingrediënt toe</button>
+      <button id="addPotBtn">Voeg pot toe</button>
     </div>
 
     <div class="workspace">
@@ -65,7 +65,7 @@
       <label>
         Mengtijd (ms): <input type="number" id="machineTime" value="2000" />
       </label>
-      <button onclick="createMachine()">Voeg mengmachine toe</button>
+      <button id="addMachineBtn">Voeg mengmachine toe</button>
     </div>
 
     <!-- Radio buttons voor de hallen -->
@@ -104,14 +104,14 @@
         >Stad/Locatie:
         <input type="text" id="location" value="Amsterdam" />
       </label>
-      <button onclick="updateWeather()">Update Weer</button>
+      <button id="updateWeatherBtn">Update Weer</button>
     </div>
 
     <h2>Kleurentest</h2>
     <div class="form-container">
       <label>Rijen: <input type="number" id="gridRows" value="6" /></label>
       <label>Kolommen: <input type="number" id="gridCols" value="6" /></label>
-      <button onclick="generateTestGrid()">Genereer grid</button>
+      <button id="generateGridBtn">Genereer grid</button>
     </div>
 
     <div id="test-grid" style="display: grid; gap: 4px; margin: 20px"></div>
