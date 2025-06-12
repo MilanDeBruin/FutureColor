@@ -11,6 +11,15 @@ const Utils = {
     return structuren[Math.floor(Math.random() * structuren.length)];
   },
 
+  getComputedRGB(color) {
+  const temp = document.createElement("div");
+  temp.style.color = color;
+  document.body.appendChild(temp);
+  const computed = getComputedStyle(temp).color;
+  document.body.removeChild(temp);
+  return computed;
+  },
+
   getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   },
