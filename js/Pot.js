@@ -1,18 +1,23 @@
 class Pot {
   static potCount = 0;
 
-  constructor() {
-    this.id = `pot-${++Pot.potCount}`;
+  constructor(id = null, color = null, structuur = "", isResult = false) {
+    this.id = id || `pot-${++Pot.potCount}`;
     this.colors = [];
     this.element = document.createElement("div");
     this.element.className = "pot";
     this.element.id = this.id;
     this.element.dataset.colors = JSON.stringify(this.colors);
-    this.element.innerHTML = `<span>Pot ${Pot.potCount}</span>`;
+
+    if (isResult && color) {
+      this.element.style.backgroundColor = color;
+    }
+
+    this.element.innerHTML = `<span>${isResult ? "Resultaat" : `Pot ${Pot.potCount}`}</span>`;
     this.element.draggable = true;
     this.element.ondragstart = this.drag;
     this.element.ondragover = this.allowDrop;
-    this.element.ondrop = this.drop.bind(this);
+    this.element.ondrop = this.drop?.bind(this); // optional
   }
 
   allowDrop(event) {

@@ -1,8 +1,10 @@
 const Utils = {
-  getRandomColor() {
-    const colors = ["red", "blue", "green", "yellow", "purple", "orange", "pink", "cyan"];
-    return colors[Math.floor(Math.random() * colors.length)];
-  },
+ getRandomColor() {
+  const r = Utils.getRandomInt(0, 255);
+  const g = Utils.getRandomInt(0, 255);
+  const b = Utils.getRandomInt(0, 255);
+  return `rgb(${r},${g},${b})`;
+},
 
   getRandomStructuur() {
     const structuren = ["vloeibaar", "korrelig", "stroperig", "poeder", "schuimend"];

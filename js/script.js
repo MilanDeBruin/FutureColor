@@ -2,18 +2,28 @@ let ingredientCount = 0;
 let potCount = 0;
 let machineCount = 0;
 let machineTimeInput = 0;
+let testGrid = 0;
 
 document.addEventListener("DOMContentLoaded", () => {
+
+  testGrid = new Testgrid("test-grid");
+
+  document.getElementById("generateGridBtn").addEventListener("click", () => {
+    const rows = parseInt(document.getElementById("gridRows").value);
+    const cols = parseInt(document.getElementById("gridCols").value);
+    testGrid.generate(rows, cols);
+  });
   // Event listeners
   document.getElementById("randomIngredientBtn").addEventListener("click", createRandomIngredient);
   document.getElementById("addIngredientBtn").addEventListener("click", createIngredient);
   document.getElementById("addPotBtn").addEventListener("click", createPot);
   document.getElementById("addMachineBtn").addEventListener("click", createMachine);
   document.getElementById("updateWeatherBtn").addEventListener("click", updateWeather);
-  document.getElementById("generateGridBtn").addEventListener("click", generateTestGrid);
 
-  document.getElementById("hall1Radio").addEventListener("change", showHall);
-  document.getElementById("hall2Radio").addEventListener("change", showHall);
+
+
+  document.getElementById('hall1Radio').addEventListener('change', () => showHall('hall1'));
+document.getElementById('hall2Radio').addEventListener('change', () => showHall('hall2'));
 
   // Init
   machineTimeInput = document.getElementById("machineTime");
