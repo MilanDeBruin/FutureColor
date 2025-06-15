@@ -132,6 +132,7 @@ function handlePotDrop(event) {
     return;
   }
 
+  pot.remove();
   const speeds = Array.from(ingredients).map(ing => parseInt(ing.getAttribute("data-speed")));
   const times = Array.from(ingredients).map(ing => parseInt(ing.getAttribute("data-mintime")));
 
